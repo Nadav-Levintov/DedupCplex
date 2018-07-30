@@ -2,7 +2,6 @@
 #ifndef PARSER_SOLVER_H
 #define PARSER_SOLVER_H
 
-#include "stdafx.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -10,6 +9,23 @@
 #include "ilcplex/ilocplexi.h"
 
 using namespace std;
+
+vector<string> string_split(string str, string token) {
+	vector<string>result;
+	while (str.size()) {
+		int index = str.find(token);
+		if (index != string::npos) {
+			result.push_back(str.substr(0, index));
+			str = str.substr(index + token.size());
+			if (str.size() == 0)result.push_back(str);
+		}
+		else {
+			result.push_back(str);
+			str = "";
+		}
+	}
+	return result;
+}
 
 class ParserSolver {
 
@@ -34,7 +50,8 @@ class ParserSolver {
 	int nFiles = 0;													// number of input files
 	int nBlocks = 0;												// number of input blocks
 
-	void parseAndSolve(string filename, string K, string eps);
+public:
+	ParserSolver(string filename, string K, string eps);
 
 	// get functions
 
@@ -59,6 +76,6 @@ class ParserSolver {
 	string& getNumK();
 	long getTargetMove();
 	long getTargetEpsilon();
-}
+};
 
 #endif // !PARSER_SOLVER_H
