@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string>
 #include <list>
-#include "ilcplex/ilocplexi.h"
+#include "ilcplex/ilocplex.h"
 
 using namespace std;
 
