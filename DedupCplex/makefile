@@ -22,7 +22,7 @@ CCC = g++ -O0
 # Compiler options 
 # ---------------------------------------------------------------------
 
-CCOPT = -std=c++11 -m64 -O -fPIC -fno-strict-aliasing -fexceptions -DNDEBUG -DIL_STD
+CCOPT = -std=c++11 -m64 -O0 -fPIC -fno-strict-aliasing -fexceptions -DNDEBUG -DIL_STD -DDEBUG -g
 
 # ---------------------------------------------------------------------
 # Link options and libraries

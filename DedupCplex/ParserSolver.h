@@ -51,7 +51,7 @@ class ParserSolver {
 	int nBlocks = 0;												// number of input blocks
 
 public:
-	ParserSolver(string filename, string K, string eps);
+	ParserSolver(string& filename, string& K, string& eps);
 
 	// get functions
 
