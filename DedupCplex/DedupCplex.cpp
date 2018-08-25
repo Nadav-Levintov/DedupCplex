@@ -64,10 +64,16 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 		}
 		
 		vector<int> blocks;	// initialize blocks array, to mark which block has been read yet and to save their sizes
-
+		vector<bool> files;	// initialize blocks array, to mark which block has been read yet and to save their sizes
+		
 		// -1 = has not been read yet
 		for (i = 0; i < this->nBlocks; i++)
 			blocks.push_back(-1);
+		
+		// false = empty file or not read yet
+		for (i = 0; i < this->nFiles; i++)
+			files.push_back(false);
+		
 		
 		for (i = 0; i < this->nBlocks; i++)
 		{
@@ -90,12 +96,12 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 
 			// [0]F, [1]file id, [2]file name, [3]directory, [4]num of blocks, [5+2i]block i id, [6+2i]block i size
 
-			for (i = 5; i < fTemp.size()-1; i = i + 2) {
+			for (i = 5; i < fTemp.size(); i = i + 2) {
 				int blockSn = stoi(fTemp[i]);	// add block id to list of file blocks
-
+				files[ceil(stod(fTemp[1], &sz))] = true;
 				if (blocks[blockSn] == -1) {	// block hasn't been seen yet in list of files								
-					double temp = ceil(stod(fTemp[i + 1], &sz) / 1024);	// block size in kb
-					//double temp = ceil(stod(fTemp[i + 1], &sz) );	// block size in bytes TODO: change back to KB
+					//double temp = ceil(stod(fTemp[i + 1], &sz) / 1024);	// block size in kb
+					double temp = ceil(stod(fTemp[i + 1], &sz) );	// block size in bytes TODO: change back to KB
 					blocks[blockSn] = (int)(temp);
 					this->totalSize += blocks[blockSn];
 					blockSizeCopy +=  blocks[blockSn]*vars_c[blockSn];// c[i]*size[i]
@@ -111,7 +117,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 		{
 			string f_name = "f" + to_string(i);
 			vars_f.add(IloNumVar(env, 0, 1, ILOINT, f_name.c_str()));// 0 <= f[i] <= 1 
-			inputSize++;
+			inputSize++;	
 		}
 		
 		while (st.at(0) == 'B' || st.at(0) == 'P') 
@@ -120,7 +126,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			// [0]B/P, [1]block_sn, [2]block name, [3]num of files containing the block, [4]file id ...[i]file id
 
 			int bsn = stoi(bTemp[1]);
-			for (i = 4; i < bTemp.size() -1; i++) { 	// list of file sns that the block is contained in
+			for (i = 4; i < bTemp.size(); i++) { 	// list of file sns that the block is contained in
 				int fsn = stoi(bTemp[i]);
 
 				model.add( vars_f[fsn] - vars_m[bsn] >= 0 );					// mi <= fj 	
@@ -162,23 +168,25 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 
 		model.add(IloMinimize(env, blockSizeCopy));
 		blockSizeCopy.end();
-
-		cplex.solve();
-		if (cplex.getStatus() == IloAlgorithm::Optimal) 
-		{	//run silver
-			//	Count and mark the files that move
-			
+		cplex.exportModel ("lpex1.lp");
+		if (cplex.solve() == IloTrue) 
+		{	
+			//	Count and mark the files that move		
 			IloNumArray vals_f(env);
-			cplex.getValues(vals_f, vars_f);
-			for (i = 0; i < this->nFiles; i++) {
-				if (vals_f[i] == 1) 
+			
+			for (IloInt i = 0; i <this->nFiles; i++)
+			{
+				if (files[i])
 				{
-					numOfMoveFiles++;
-					this->moveFile.push_back(i);
+					if (1 == cplex.getValue(vars_f[i]))
+					{
+						numOfMoveFiles++;
+						this->moveFile.push_back(i);
+					}
 				}
 			}
 			
-			env.out() << "Values f = " << vals_f << endl;
+			//env.out() << "Values f = " << vals_f << endl;
 
 			IloNumArray vals_m(env);
 			cplex.getValues(vals_m, vars_m);
@@ -204,8 +212,8 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 					copyBlock.push_back(i);
 				}
 			}
-			env.out() << "Values m = " << vals_m << endl;
-			env.out() << "Values c = " << vals_c << endl;
+			//env.out() << "Values m = " << vals_m << endl;
+			//env.out() << "Values c = " << vals_c << endl;
 			
 			this->time = cplex.getCplexTime();
 		}
@@ -213,7 +221,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			cout << "Bad file!\n Problem not solved." << endl;
 			exit(0);
 		}
-		
+	//cplex.exportModel ("lpex1.lp");
 
 	}
 	catch (IloException e) { // end cplex try
