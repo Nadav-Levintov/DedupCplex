@@ -355,11 +355,11 @@ int main(int argc, char *argv[])
 			exportFile << "Input Size: " << solve.getInputSize()  << endl;
 			exportFile << "Time: " << solve.getTime() << "," << endl;
 			exportFile << "RAM:" << endl;
-			exportFile << "Move Space: " << solve.getTotalMoveSpace()  << endl;
-			exportFile << "Copy Space: " <<solve.getTotalCopySpace()  << endl;
-			exportFile << "Move Files: " << solve.getNumOfMoveFiles()  << endl;
-			exportFile << "Move Blocks: " << solve.getNumOfMoveBlocks() << endl;
-			exportFile << "Copy Blocks: " << solve.getNumOfCopyBlocks() << endl;
+			exportFile << "Moved Storage: " << solve.getTotalMoveSpace()  << endl;
+			exportFile << "Copied Storage: " <<solve.getTotalCopySpace()  << endl;
+			exportFile << "Moved Files: " << solve.getNumOfMoveFiles()  << endl;
+			exportFile << "Moved Blocks: " << solve.getNumOfMoveBlocks() << endl;
+			exportFile << "Copied Blocks: " << solve.getNumOfCopyBlocks() << endl;
 
 			cout << "File " << outputFileName << " has been created!" << endl;
 		}
