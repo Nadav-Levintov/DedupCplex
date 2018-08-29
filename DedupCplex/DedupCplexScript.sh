@@ -12,6 +12,7 @@ KBTGB=$MB
 
 function log_run {
 	RESULTFILE=`ls | grep 'result'`
+	#cat ${RESULTFILE}
 	TYPE=`cat ${FILE}${CSV} | grep 'Output type:' | cut -d ":" -f 2 | tr -d '[:space:]'`
 	FILES=`cat ${FILE}${CSV} | grep 'Num files' | cut -d ":" -f 2 | tr -d '[:space:]'`
 	echo -n "${FILE}${CSV},${TYPE},${FILES}," >> runs.csv
@@ -22,27 +23,26 @@ function log_run {
 		BLOCKS="0"
 		PHYSICAL=`cat ${FILE}${CSV} | grep 'Num physical files' | cut -d ":" -f 2 | tr -d '[:space:]'`	
 	fi
-	#TODO: CALC TOTAL SIZE
-	TOTAL="1"
+	TOTAL=`cat ${RESULTFILE} | grep 'Total Size' | cut -d ":" -f 2 | tr -d '[:space:]'`
 	KBYTES=`printf "%.2f\n" "$(bc -l <<<  ${TOTAL}*${K}/100 )"`
 	EPSILONBYTES=`printf "%.2f\n" "$(bc -l <<<  ${KBYTES}*${EPSILON}/100 )"`
-	MOVEDB=`cat ${RESULTFILE} | grep 'Moved Storage' | cut -d ":" -f 2 | tr -d '[:space:]'`
-	COPIEDB=`cat ${RESULTFILE} | grep 'Copied Storage' | cut -d ":" -f 2 | tr -d '[:space:]'`
-	MOVEDP=`printf "%.2f\n" "$(bc -l <<<  ${MOVEDB}/${TOTAL}*100 )"`
-	COPIEDP=`printf "%.2f\n" "$(bc -l <<<  ${COPIEDB}/${TOTAL}*100 )"`
-	INPUTTIME="TODO"
-	SOLVETIME="TODO"
-	RAM="TODO"
-	#calc_time_and_ram
-	echo "${PHYSICAL},${BLOCKS},${TOTAL},${KBYTES},${EPSILONBYTES},${MOVEDB},${COPIEDB},${MOVEDP},${COPIEDP},${INPUTTIME},${SOLVETIME},${RAM}" >> runs.csv
+	MOVEDBYTES=`cat ${RESULTFILE} | grep 'Moved Storage' | cut -d ":" -f 2 | tr -d '[:space:]'`
+	COPIEDBYTES=`cat ${RESULTFILE} | grep 'Copied Storage' | cut -d ":" -f 2 | tr -d '[:space:]'`
+	MOVEDFILES=`cat ${RESULTFILE} | grep 'Moved Files' | cut -d ":" -f 2 | tr -d '[:space:]'`
+	MOVEDPERCENT=`printf "%.2f\n" "$(bc -l <<<  ${MOVEDBYTES}/${TOTAL}*100 )"`
+	COPIEDPERCENT=`printf "%.2f\n" "$(bc -l <<<  ${COPIEDBYTES}/${TOTAL}*100 )"`
+	INPUTTIME=`cat ${RESULTFILE} | grep 'Input time' | cut -d ":" -f 2 | tr -d '[:space:]'`
+	SOLVETIME=`cat ${RESULTFILE} | grep 'Solve Time' | cut -d ":" -f 2 | tr -d '[:space:]'`
+	echo -n "${PHYSICAL},${BLOCKS},${TOTAL},${KBYTES},${EPSILONBYTES},${MOVEDBYTES},${COPIEDBYTES},${MOVEDFILES},${K},${EPSILON},${MOVEDPERCENT},${COPIEDPERCENT},${INPUTTIME},${SOLVETIME}" >> runs.csv
+	calc_time_and_ram
 	rm ${RESULTFILE}
 }
 
 function calc_time_and_ram {
-	T=`cat time.csv | cut -d ',' -f 1`
+	#T=`cat time.csv | cut -d ',' -f 1`
 	MEM=`cat time.csv | cut -d ',' -f 2`
 	MEM=`printf "%.2f\n" "$(bc -l <<< ${MEM}/${KBTGB} )"`
-	echo -n "${T},${MEM}" >> runs.csv
+	echo ",${MEM}" >> runs.csv
 }
 
 function run_dedup {

@@ -27,6 +27,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 	
 
 	try {
+		IloNum start;
 		IloModel model(env);
 		IloNumVarArray vars_c(env);
 		IloNumVarArray vars_m(env);	
@@ -35,6 +36,8 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 		IloCplex cplex(model);
 		IloExpr blockSizeCopy(env);
 		IloExpr blockSizeMove(env);
+
+		start = cplex.getTime();
 		
 		if (!file.is_open())
 		{
@@ -169,8 +172,11 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 		model.add(IloMinimize(env, blockSizeCopy));
 		blockSizeCopy.end();
 		cplex.exportModel ("lpex1.lp");
+		this->timeInput = cplex.getTime() - start;
+		start = cplex.getTime();
 		if (cplex.solve() == IloTrue) 
-		{	
+		{
+			this->time = cplex.getTime() - start;
 			//	Count and mark the files that move		
 			IloNumArray vals_f(env);
 			
@@ -214,8 +220,6 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			}
 			//env.out() << "Values m = " << vals_m << endl;
 			//env.out() << "Values c = " << vals_c << endl;
-			
-			this->time = cplex.getCplexTime();
 		}
 		else {
 			cout << "Bad file!\n Problem not solved." << endl;
@@ -353,13 +357,14 @@ int main(int argc, char *argv[])
 			exportFile << "Epsilon: " << solve.getTargetEpsilon()  << endl;
 			exportFile << "Input time: " << solve.getTimeInput()  << endl;
 			exportFile << "Input Size: " << solve.getInputSize()  << endl;
-			exportFile << "Time: " << solve.getTime() << "," << endl;
+			exportFile << "Solve Time: " << solve.getTime() << endl;
 			exportFile << "RAM:" << endl;
 			exportFile << "Moved Storage: " << solve.getTotalMoveSpace()  << endl;
 			exportFile << "Copied Storage: " <<solve.getTotalCopySpace()  << endl;
 			exportFile << "Moved Files: " << solve.getNumOfMoveFiles()  << endl;
 			exportFile << "Moved Blocks: " << solve.getNumOfMoveBlocks() << endl;
 			exportFile << "Copied Blocks: " << solve.getNumOfCopyBlocks() << endl;
+			exportFile << "Total Size: " << solve.getTotalSize() << endl;
 
 			cout << "File " << outputFileName << " has been created!" << endl;
 		}
