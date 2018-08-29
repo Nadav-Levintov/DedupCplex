@@ -12,11 +12,10 @@ KBTGB=$MB
 
 function log_run {
 	RESULTFILE=`ls | grep 'result'`
-	echo -n "${FILE}${CSV},${TOTALS},${POINTERS}," >> runs.csv
 	TYPE=`cat ${FILE}${CSV} | grep 'Output type:' | cut -d ":" -f 2 | tr -d '[:space:]'`
-	calc_time_and_ram
 	FILES=`cat ${FILE}${CSV} | grep 'Num files' | cut -d ":" -f 2 | tr -d '[:space:]'`
-	if [ "$TYPE" = "block-level" ]; then
+	echo -n "${FILE}${CSV},${TYPE},${FILES}," >> runs.csv
+	if [ "${TYPE}" == "block-level" ]; then
 		PHYSICAL="0"
 		BLOCKS=`cat ${FILE}${CSV} | grep 'Num blocks' | cut -d ":" -f 2 | tr -d '[:space:]'`	
 	else
@@ -25,17 +24,18 @@ function log_run {
 	fi
 	#TODO: CALC TOTAL SIZE
 	TOTAL="1"
-	let "KBYTES=${TOTAL}*${K}/100"
+	KBYTES=`printf "%.2f\n" "$(bc -l <<<  ${TOTAL}*${K}/100 )"`
 	EPSILONBYTES=`printf "%.2f\n" "$(bc -l <<<  ${KBYTES}*${EPSILON}/100 )"`
 	MOVEDB=`cat ${RESULTFILE} | grep 'Moved Storage' | cut -d ":" -f 2 | tr -d '[:space:]'`
 	COPIEDB=`cat ${RESULTFILE} | grep 'Copied Storage' | cut -d ":" -f 2 | tr -d '[:space:]'`
-	#Issue with these lines, diffrenet div op?
-	#MOVEDP=`printf "%.2f\n" "$(bc -l <<<  ${MOVEDB}/${TOTAL}*100 )"`
-	#COPIEDP=`printf "%.2f\n" "$(bc -l <<<  ${COPIEDB}/${TOTAL}*100 )"`
+	MOVEDP=`printf "%.2f\n" "$(bc -l <<<  ${MOVEDB}/${TOTAL}*100 )"`
+	COPIEDP=`printf "%.2f\n" "$(bc -l <<<  ${COPIEDB}/${TOTAL}*100 )"`
 	INPUTTIME="TODO"
 	SOLVETIME="TODO"
 	RAM="TODO"
-	echo ",${FILES},${PHYSICAL},${BLOCKS},${TOTAL},${KBYTES},${EPSILONBYTES},${MOVEDB},${COPIEDB},${MOVEDP},${COPIEDP},${INPUTTIME},${SOLVETIME},${RAM}" >> runs.csv
+	#calc_time_and_ram
+	echo "${PHYSICAL},${BLOCKS},${TOTAL},${KBYTES},${EPSILONBYTES},${MOVEDB},${COPIEDB},${MOVEDP},${COPIEDP},${INPUTTIME},${SOLVETIME},${RAM}" >> runs.csv
+	rm ${RESULTFILE}
 }
 
 function calc_time_and_ram {
@@ -59,9 +59,8 @@ then
 	rm -rf runs.csv
 fi
 
-echo "Input file, Type,  Num Logical, Num Physical, Num Blocks, Total Bytes, K Bytes, Epsilon Bytes, Moved bytes, Copied Bytes, Moved Files, K, Epsilon, Moved, Copied, Process time [Seconds], Solver time [Seconds], RAM[GB]" >> runs.csv
 echo "#`date`" >> runs.csv
-
+echo "Input file, Type,  Num Logical, Num Physical, Num Blocks, Total Bytes, K Bytes, Epsilon Bytes, Moved bytes, Copied Bytes, Moved Files, K, Epsilon, Moved, Copied, Process time [Seconds], Solver time [Seconds], RAM[GB]" >> runs.csv
 
 for FILE in $( ls -Sr | grep ".csv" | cut -f 1 -d . | grep -v "runs" ); do
     rm -rf ${FILE}
