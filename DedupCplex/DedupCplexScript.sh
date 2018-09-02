@@ -50,6 +50,7 @@ function run_dedup {
     /usr/bin/time -f "%e,%M" -o time.csv ./DedupCplex ${FILE}${CSV} ${K}'%' ${EPSILON}'%' > "${FILE}_K${K}_E${EPSILON}${LOG}" 
 	log_run
 	rm -rf time.csv
+	mv lpex1.lp ${OUTFILE}.lp
 }
 
 rm -rf time.csv
