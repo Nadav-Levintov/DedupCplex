@@ -260,3 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 /DedupCplex/runs.csv
+/DedupCplex/lpex1.lp

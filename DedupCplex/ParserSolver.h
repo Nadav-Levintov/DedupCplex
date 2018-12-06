@@ -34,19 +34,19 @@ class ParserSolver {
 	double time = 0;													// execution time.
 	double timeInput = 0;												// duration of creating input to cplex (files&blocks arrays).
 	IloCplex cplex;
-	long totalMoveSpace = 0;										// total space that is moved 
-	long totalCopySpace = 0;										// total space that is copied 
+	double totalMoveSpace = 0;										// total space that is moved 
+	double totalCopySpace = 0;										// total space that is copied 
 	int numOfMoveFiles = 0;											// number of files to be moved 
 	int numOfMoveBlocks = 0, numOfCopyBlocks = 0;					// number of blocks to be copied 
 	list<int> moveFile;			// Array of files to be moved
 	list<int> moveBlock;		// Array of blocks to be moved
 	list<int> copyBlock;		// Array of blocks to be copied
-	long totalSize = 0;												// Total system size
+	double totalSize = 0;												// Total system size
 	int inputSize = 0;												// size of the files&blocks arrays.
 	string numK;
 	string epsilon;
-	long targetMove;
-	long targetEpsilon;
+	double targetMove;
+	double targetEpsilon;
 	int nFiles = 0;													// number of input files
 	int nBlocks = 0;												// number of input blocks
 

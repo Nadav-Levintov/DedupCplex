@@ -103,8 +103,8 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 				int blockSn = stoi(fTemp[i]);	// add block id to list of file blocks
 				files[ceil(stod(fTemp[1], &sz))] = true;
 				if (blocks[blockSn] == -1) {	// block hasn't been seen yet in list of files								
-					//double temp = ceil(stod(fTemp[i + 1], &sz) / 1024);	// block size in kb
-					double temp = ceil(stod(fTemp[i + 1], &sz) );	// block size in bytes TODO: change back to KB
+					double temp = fmax(1,ceil(stod(fTemp[i + 1], &sz) / 1024));	// block size in kb
+					//double temp = ceil(stod(fTemp[i + 1], &sz) );	// block size in bytes TODO: change back to KB
 					blocks[blockSn] = (int)(temp);
 					this->totalSize += blocks[blockSn];
 					blockSizeCopy +=  blocks[blockSn]*vars_c[blockSn];// c[i]*size[i]
@@ -144,8 +144,8 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			}
 		}// End if(B)
 				
-		long onePercent;
-		long lowerbound, upperbound;
+		int onePercent;
+		int lowerbound, upperbound;
 
 		// Calculate K, eps
 		if (K.at(K.length() - 1) == '%') {	//input asked for values in %
