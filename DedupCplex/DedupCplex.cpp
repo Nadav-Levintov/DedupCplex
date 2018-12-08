@@ -10,10 +10,11 @@
 #include <cmath>
 #include "ParserSolver.h"
 
-#define CPLEX_TIME_LIMIT_IN_SECONDS (36000) //3600 = 10 hours
+#define CPLEX_TIME_LIMIT_IN_SECONDS (10*60*60) //3600 = 10 hours
 
 ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 	IloEnv env;
+	bool isContainers = false;
 
 	string::size_type sz;
 	uint32_t i;
@@ -56,19 +57,26 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 
 			// find number of files and blocks in header
 			if (t.size() >= 4) {
-				if (!t[2].compare("files:")) {		// # Num Files: <nFiles>
+				if (!t[2].compare("files:") && t[3].compare("")) {		// # Num Files: <nFiles>
 					this->nFiles = stoi(t[3]);
 				}
-				if (!t[2].compare("blocks:")) {	// # Num Blocks: <nblocks>
+				if (!t[2].compare("blocks:")){	// # Num Blocks: <nblocks>
 					this->nBlocks = stoi(t[3]);
 				}
-				if (!t[2].compare("physical")) {	// # Num Blocks: <nblocks>
+				if (!t[2].compare("Blocks:")){	// # Num Blocks: <nblocks>
+					this->nBlocks = stoi(t[3]);
+				}
+				if (!t[2].compare("physical")) {	// # Num physical: <nblocks>
 					this->nBlocks = stoi(t[4]);
 				}
+				if (!t[2].compare("containers")) {	// # Num Containers: <nblocks>
+					this->nBlocks = stoi(t[4]);
+					isContainers = true;
+				}
+				
 			}
 				getline(file, st);
 		}
-		
 		vector<int> blocks;	// initialize blocks array, to mark which block has been read yet and to save their sizes
 		vector<bool> files;	// initialize blocks array, to mark which block has been read yet and to save their sizes
 		
@@ -93,7 +101,6 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			model.add(vars_c[i] + vars_m[i]<= 1);
 
 		}
-		
 		while (st.at(0) == 'F') 
 		{	// while at files list
 
@@ -102,12 +109,16 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 
 			// [0]F, [1]file id, [2]file name, [3]directory, [4]num of blocks, [5+2i]block i id, [6+2i]block i size
 
-			for (i = 5; i < fTemp.size(); i = i + 2) {
+			for (i = 5; i < (fTemp.size()-1); i = i + 2) {
 				int blockSn = stoi(fTemp[i]);	// add block id to list of file blocks
 				files[ceil(stod(fTemp[1], &sz))] = true;
 				if (blocks[blockSn] == -1) {	// block hasn't been seen yet in list of files								
-					double temp = fmax(1,ceil(stod(fTemp[i + 1], &sz) / 1024));	// block size in kb
-					//double temp = ceil(stod(fTemp[i + 1], &sz) );	// block size in bytes TODO: change back to KB
+					double temp = 1;		//in case containers we count their size as equal (1KB)
+					if(!isContainers)
+					{
+						temp = fmax(1,ceil(stod(fTemp[i + 1], &sz) / 1024));	// block size in kb
+					}
+					
 					blocks[blockSn] = (int)(temp);
 					this->totalSize += blocks[blockSn];
 					blockSizeCopy +=  blocks[blockSn]*vars_c[blockSn];// c[i]*size[i]
@@ -118,7 +129,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 
 			getline(file, st);
 		}// End while(F)
-		
+			
 		for (i = 0; i < nFiles; i++)
 		{
 			string f_name = "f" + to_string(i);
@@ -126,13 +137,14 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			inputSize++;	
 		}
 		
-		while (st.at(0) == 'B' || st.at(0) == 'P') 
+		while (st.at(0) == 'B' || st.at(0) == 'P' || st.at(0) == 'C') 
 		{	// while at blocks/phsysical files list	
 			vector<string> bTemp = string_split(st, ",");
 			// [0]B/P, [1]block_sn, [2]block name, [3]num of files containing the block, [4]file id ...[i]file id
+			// [0]C, [1]container_sn, [2]container size, [3]num of files containing the container, [4]file id ...[i]file id
 
 			int bsn = stoi(bTemp[1]);
-			for (i = 4; i < bTemp.size(); i++) { 	// list of file sns that the block is contained in
+			for (i = 4; i < (bTemp.size()-1); i++) { 	// list of file sns that the block is contained in
 				int fsn = stoi(bTemp[i]);
 
 				model.add( vars_f[fsn] - vars_m[bsn] >= 0 );					// mi <= fj 	
@@ -146,7 +158,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 				break;
 			}
 		}// End if(B)
-				
+						
 		int onePercent;
 		int lowerbound, upperbound;
 
