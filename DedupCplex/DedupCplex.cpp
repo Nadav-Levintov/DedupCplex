@@ -10,7 +10,7 @@
 #include <cmath>
 #include "ParserSolver.h"
 
-#define CPLEX_TIME_LIMIT_IN_SECONDS (10*60*60) //3600 = 10 hours
+#define CPLEX_TIME_LIMIT_IN_SECONDS (12*60*60) //12 hours
 
 ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 	IloEnv env;
@@ -39,7 +39,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 		IloCplex cplex(model);
 		IloExpr blockSizeCopy(env);
 		IloExpr blockSizeMove(env);
-		cplex.setParam(IloCplex::TiLim, CPLEX_TIME_LIMIT_IN_SECONDS);
+		cplex.setParam(IloCplex::Param::TimeLimit, CPLEX_TIME_LIMIT_IN_SECONDS);
 
 		start = cplex.getTime();
 		
