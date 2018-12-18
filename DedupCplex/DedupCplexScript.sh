@@ -99,7 +99,8 @@ function calc_time_and_ram {
 
 function run_dedup {
 	OUTFILE="${FILE}_K${K}_E${EPSILON}"
-    /usr/bin/time -f "%e,%M" -o time.csv ./DedupCplex ${FILE}${CSV} ${K}'%' ${EPSILON}'%' > "${FILE}_K${K}_E${EPSILON}${LOG}" 
+	#750m = 12.5h
+    /usr/bin/time -f "%e,%M" -o time.csv timeout --preserve-status 750m ./DedupCplex ${FILE}${CSV} ${K}'%' ${EPSILON}'%' > "${FILE}_K${K}_E${EPSILON}${LOG}" 
 	log_run
 	rm -rf time.csv
 	mv lpex1.lp ${OUTFILE}.lp
