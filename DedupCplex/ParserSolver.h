@@ -45,8 +45,8 @@ class ParserSolver {
 	int inputSize = 0;												// size of the files&blocks arrays.
 	string numK;
 	string epsilon;
-	double targetMove;
-	double targetEpsilon;
+	int targetMove;
+	int targetEpsilon;
 	int nFiles = 0;													// number of input files
 	int nBlocks = 0;												// number of input blocks
 

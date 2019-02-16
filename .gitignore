@@ -6,6 +6,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.csv
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -261,3 +262,4 @@ __pycache__/
 *.pyc
 /DedupCplex/runs.csv
 /DedupCplex/lpex1.lp
+*.lp

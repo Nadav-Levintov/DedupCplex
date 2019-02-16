@@ -60,16 +60,33 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 				if (!t[2].compare("files:") && t[3].compare("")) {		// # Num Files: <nFiles>
 					this->nFiles = stoi(t[3]);
 				}
-				if (!t[2].compare("blocks:")){	// # Num Blocks: <nblocks>
+				if (!t[2].compare("blocks:") && !isContainers){	// # Num Blocks: <nblocks>
 					this->nBlocks = stoi(t[3]);
 				}
-				if (!t[2].compare("Blocks:")){	// # Num Blocks: <nblocks>
+				if (!t[2].compare("Blocks:") && !isContainers){	// # Num Blocks: <nblocks>
 					this->nBlocks = stoi(t[3]);
 				}
-				if (!t[2].compare("physical")) {	// # Num physical: <nblocks>
+				if (!t[2].compare("physical:") && !isContainers) {	// # Num physical: <nblocks>
 					this->nBlocks = stoi(t[4]);
 				}
-				if (!t[2].compare("containers")) {	// # Num Containers: <nblocks>
+				if (!t[2].compare("containers:")) {	// # Num Containers: <nblocks>
+					this->nBlocks = stoi(t[4]);
+					isContainers = true;
+				}
+
+				if (!t[3].compare("files:") && t[4].compare("")) {		// # Num Files: <nFiles>
+					this->nFiles = stoi(t[4]);
+				}
+				if (!t[3].compare("blocks:") && !isContainers) {	// # Num of Blocks: <nblocks>
+					this->nBlocks = stoi(t[4]);
+				}
+				if (!t[3].compare("Blocks:") && !isContainers) {	// # Num of Blocks: <nblocks>
+					this->nBlocks = stoi(t[4]);
+				}
+				if (!t[3].compare("physical:") && !isContainers) {	// # Num of physical: <nblocks>
+					this->nBlocks = stoi(t[4]);
+				}
+				if (!t[3].compare("containers:")) {	// # Num of Containers: <nblocks>
 					this->nBlocks = stoi(t[4]);
 					isContainers = true;
 				}
@@ -103,15 +120,16 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 		}
 		while (st.at(0) == 'F') 
 		{	// while at files list
-
+			int fileId = 0;
 			// get sizes of blocks and add to total, and add their term to the cplex formula
 			vector<string> fTemp = string_split(st, ","); //string_split into chunks between ','
 
 			// [0]F, [1]file id, [2]file name, [3]directory, [4]num of blocks, [5+2i]block i id, [6+2i]block i size
+			fileId = stoi(fTemp[1]);
+			files[fileId] = true;
 
 			for (i = 5; i < (fTemp.size()-1); i = i + 2) {
-				int blockSn = stoi(fTemp[i]);	// add block id to list of file blocks
-				files[ceil(stod(fTemp[1], &sz))] = true;
+				int blockSn = stoi(fTemp[i]);	// add block id to list of file blocks	
 				if (blocks[blockSn] == -1) {	// block hasn't been seen yet in list of files								
 					double temp = 1;		//in case containers we count their size as equal (1KB)
 					if(!isContainers)
@@ -134,7 +152,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 		{
 			string f_name = "f" + to_string(i);
 			vars_f.add(IloNumVar(env, 0, 1, ILOINT, f_name.c_str()));// 0 <= f[i] <= 1 
-			inputSize++;	
+			inputSize++;
 		}
 		
 		while (st.at(0) == 'B' || st.at(0) == 'P' || st.at(0) == 'C') 
@@ -159,26 +177,33 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			}
 		}// End if(B)
 						
-		int onePercent;
+		double onePercent = 0.0;
 		int lowerbound, upperbound;
 
 		// Calculate K, eps
 		if (K.at(K.length() - 1) == '%') {	//input asked for values in %
-			onePercent = totalSize / 100;
+			double kDouble = 0.0, epsDouble = 0.0;
+			onePercent = ((double)(this->totalSize)) / 100.0;
 			K = K.substr(0, K.length() - 1);
-			targetMove = onePercent * stol(K);
+			kDouble = stod(K, &sz);
+			this->targetMove = (int)(onePercent * kDouble);
+			assert(0 != this->targetMove);
+			//this->targetMove = (0 == this->targetMove) ? 1 : this->targetMove;
 			this->epsilon = (eps.length() - 1) < 5 ? eps.substr(0, epsilon.length() - 1) : eps.substr(0, 5);
-			targetEpsilon = (long)(onePercent*stod(this->epsilon, &sz));
+			epsDouble = stod(this->epsilon, &sz);
+			this->targetEpsilon = (int)(onePercent * epsDouble);
+			assert(0 != this->targetEpsilon);
+			//this->targetEpsilon = (0 == this->targetEpsilon) ? 1 : this->targetEpsilon;
 		}
 		else	// input asked in absolute values
 		{
-			targetMove = stol(K);
-			targetEpsilon = stol(eps);
+			this->targetMove = stoi(K);
+			this->targetEpsilon = stoi(eps);
 		}
 		
 		// constraints: kTemp+epsTemp <= blockSizeMove <= kTemp+epsTemp
-		lowerbound = targetMove - targetEpsilon;
-		upperbound = targetMove + targetEpsilon;
+		lowerbound = this->targetMove - this->targetEpsilon;
+		upperbound = this->targetMove + this->targetEpsilon;
 		model.add(blockSizeMove >= lowerbound);
 		model.add(blockSizeMove <= upperbound);
 		inputSize += 2;
