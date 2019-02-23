@@ -27,7 +27,6 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 	
     
 	timeInput = 0;
-	
 
 	try {
 		IloNum start;
@@ -125,6 +124,13 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			vector<string> fTemp = string_split(st, ","); //string_split into chunks between ','
 
 			// [0]F, [1]file id, [2]file name, [3]directory, [4]num of blocks, [5+2i]block i id, [6+2i]block i size
+			
+			if (fTemp[1].compare("4294967295") == 0)
+			{
+				/* Empty File, jump over */
+				getline(file, st);
+				continue;
+			}
 			fileId = stoi(fTemp[1]);
 			files[fileId] = true;
 
@@ -132,7 +138,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 				int blockSn = stoi(fTemp[i]);	// add block id to list of file blocks	
 				if (blocks[blockSn] == -1) {	// block hasn't been seen yet in list of files								
 					double temp = 1;		//in case containers we count their size as equal (1KB)
-					if(!isContainers)
+					//if(!isContainers)
 					{
 						temp = fmax(1,ceil(stod(fTemp[i + 1], &sz) / 1024));	// block size in kb
 					}
@@ -150,20 +156,29 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			
 		for (i = 0; i < nFiles; i++)
 		{
-			string f_name = "f" + to_string(i);
-			vars_f.add(IloNumVar(env, 0, 1, ILOINT, f_name.c_str()));// 0 <= f[i] <= 1 
-			inputSize++;
+				string f_name = "f" + to_string(i);
+				vars_f.add(IloNumVar(env, 0, 1, IloNumVar::Int, f_name.c_str()));// 0 <= f[i] <= 1 
+				inputSize++;
 		}
 		
-		while (st.at(0) == 'B' || st.at(0) == 'P' || st.at(0) == 'C') 
-		{	// while at blocks/phsysical files list	
+		while (st.at(0) == 'B' || st.at(0) == 'P' || st.at(0) == 'C' || st.at(0) == 'M')
+		{	
+			if (st.at(0) == 'M')
+			{
+				if (!getline(file, st))
+				{
+					break;
+				}
+				continue;
+			}
+			// while at blocks/phsysical files list	
 			vector<string> bTemp = string_split(st, ",");
 			// [0]B/P, [1]block_sn, [2]block name, [3]num of files containing the block, [4]file id ...[i]file id
 			// [0]C, [1]container_sn, [2]container size, [3]num of files containing the container, [4]file id ...[i]file id
 
-			int bsn = stoi(bTemp[1]);
+			IloInt bsn = stoi(bTemp[1]);
 			for (i = 4; i < (bTemp.size()-1); i++) { 	// list of file sns that the block is contained in
-				int fsn = stoi(bTemp[i]);
+				IloInt fsn = stoi(bTemp[i]);
 
 				model.add( vars_f[fsn] - vars_m[bsn] >= 0 );					// mi <= fj 	
 				model.add( vars_m[bsn] + vars_c[bsn] - vars_f[fsn] >= 0 );		// fj <= mi+ci
@@ -219,8 +234,8 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 			this->time = cplex.getTime() - start;
 			//	Count and mark the files that move		
 			IloNumArray vals_f(env);
-			
-			for (IloInt i = 0; i <this->nFiles; i++)
+
+			for (IloInt i = 0; i < this->nFiles; i++)
 			{
 				if (files[i])
 				{
@@ -229,6 +244,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 						numOfMoveFiles++;
 						this->moveFile.push_back(i);
 					}
+						
 				}
 			}
 			
@@ -271,7 +287,6 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 	catch (IloException e) { // end cplex try
 		cout << e.getMessage() << endl;
 	}// End try
-
 }
 
 // get functions

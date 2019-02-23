@@ -129,7 +129,7 @@ function run_dedup_code {
 			done
 		done
 		#mv *${FILE}*.* ${FILE}
-		rm ${FILE}${CSV}
+		gzip ${FILE}${CSV}
 	done
 }
 
