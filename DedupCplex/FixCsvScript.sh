@@ -68,7 +68,9 @@ do
 	FILENAME=${line[0]}
 	echo "Fixing ${FILENAME}"
 	FILEPATH=`find . -name ${FILENAME}*`
-	if [[ -a ${FILEPATH} ]]; then
+	echo "${FILEPATH}"
+	if [[ -a ${FILEPATH} ]] &&  [[ ${FILEPATH} == *gz* ]]
+	then
 		gunzip ${FILEPATH}
 		FILEPATH=`find . -name ${FILENAME}*`
 	fi
@@ -88,7 +90,7 @@ do
 	getBlocks
 	line[10]=${BLOCKS}
 
-	IFS=","; echo "${line[@]:0:24}" >> ${RUNS_FILE}_fixed.csv
+	IFS=','; echo "${line[*]}" >> ${RUNS_FILE}_fixed.csv
 
 	gzip ${FILEPATH}
 done <"${RUNS_FILE}.csv"
