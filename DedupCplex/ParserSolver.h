@@ -31,8 +31,8 @@ class ParserSolver {
 
 	string fileName;
 	list<string> output;				// Save the relevant information about the file system (to the export file).
-	double time = 0;													// execution time.
-	double timeInput = 0;												// duration of creating input to cplex (files&blocks arrays).
+	int time = 0;													// execution time.
+	int timeInput = 0;												// duration of creating input to cplex (files&blocks arrays).
 	IloCplex cplex;
 	double totalMoveSpace = 0;										// total space that is moved 
 	double totalCopySpace = 0;										// total space that is copied 

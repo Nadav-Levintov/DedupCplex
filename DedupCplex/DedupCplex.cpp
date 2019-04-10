@@ -138,7 +138,7 @@ ParserSolver::ParserSolver(string& filename, string& K, string &eps) {
 				int blockSn = stoi(fTemp[i]);	// add block id to list of file blocks	
 				if (blocks[blockSn] == -1) {	// block hasn't been seen yet in list of files								
 					double temp = 1;		//in case containers we count their size as equal (1KB)
-					//if(!isContainers)
+					if(!isContainers)
 					{
 						temp = fmax(1,ceil(stod(fTemp[i + 1], &sz) / 1024));	// block size in kb
 					}

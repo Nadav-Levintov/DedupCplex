@@ -56,6 +56,8 @@ function log_run {
 	else
 		FSN="$(($FSN+0))"
 	fi
+	$FSN=${$FSN##+(0)}
+	$FS1=${$FS1##+(0)}
 	NUMFS="$(($FSN-$FS1))"
 	echo -n "${FILE}${CSV},${TYPE},${DEPTH},${FS1},${FSN},${NUMFS},${ATYPE},${FILES}," >> ${SCRIPT_PATH}/runs_${SCRIPT_DIR}.csv
 	RESULTFILE=`ls -Sr | grep 'result'`
@@ -159,7 +161,7 @@ then
 fi
 
 echo "#`date`" >> runs_${SCRIPT_DIR}.csv
-echo "Input file, Type, Depth, FS1, FSN, NumFS, Aggregate type, Num Logical, Num Physical, Num Blocks, Num Containers , Total Bytes, K Bytes, Epsilon Bytes, Moved bytes, Copied Bytes, Moved Files, K, Epsilon, Moved, Copied, Process time [Seconds], Solver time [Seconds], RAM[GB]" >> runs_${SCRIPT_DIR}.csv
+echo "Input file, Type, Depth, FS1, FSN, NumFS, Aggregate type, Num Logical, Num Physical, Num Blocks, Num Containers , Total KBs, K KBs, Epsilon KBs, Moved KBs, Copied KBs, Moved Files, K, Epsilon, Moved, Copied, Process time [Seconds], Solver time [Seconds], RAM[GB]" >> runs_${SCRIPT_DIR}.csv
 
 traverse_directories
 echo "All Done"
